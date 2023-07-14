@@ -1,0 +1,53 @@
+version: "3.9"
+services:
+  backend:
+    container_name: backend
+    build:
+      context: ./backend-nusantara
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - ./backend-nusantara:/var/www/html
+    depends_on:
+      - db
+    command: 'php artisan serve --host=0.0.0.0'
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: PhpMyAdmin
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8081:80
+
+  frontend:
+    container_name: frontend
+    depends_on:
+      - backend
+    build: 
+      context: ./frontend-nusantara
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend-nusantara/:/app
+    command: sh -c "npm rebuild esbuild && yarn dev"
+      
+  db:
+    platform: linux/x86_64
+    image: mysql:8.0
+    container_name: database
+    environment:
+      MYSQL_DATABASE: "nusantara_db"
+      MYSQL_USER: "admin"
+      MYSQL_ROOT: "root"
+      MYSQL_PASSWORD: "123"
+      MYSQL_ROOT_PASSWORD: "123"
+    ports:
+      - 3306:3306
